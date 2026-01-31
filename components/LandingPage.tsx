@@ -4,18 +4,19 @@ import Header from './Header';
 
 interface LandingPageProps {
   onJoinClick: () => void;
+  onAdminClick: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onJoinClick }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onJoinClick, onAdminClick }) => {
   return (
     <div className="relative min-h-screen bg-white pb-32">
       <Header onJoinClick={onJoinClick} />
-      
+
       {/* Hero Section */}
       <section className="relative h-[85vh] flex items-end overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img 
-            src="https://images.unsplash.com/photo-1535131749006-b7f58c99034b?q=80&w=2070&auto=format&fit=crop" 
+          <img
+            src="/hero-bg.jpg"
             className="w-full h-full object-cover brightness-[0.5]"
             alt="Golf Course"
           />
@@ -27,21 +28,23 @@ const LandingPage: React.FC<LandingPageProps> = ({ onJoinClick }) => {
             Est. Northwick Park
           </span>
           <h1 className="text-5xl font-heading text-white mb-4 leading-[1.05] uppercase italic font-black">
-            Master <br/> Your <span className="text-emerald-400">Swing</span>
+            Master <br /> Your <span className="text-emerald-400">Swing</span>
           </h1>
           <p className="text-base text-slate-300 mb-8 leading-relaxed max-w-sm font-medium">
-            Join London's most advanced golf facility. Elite coaching meets cutting-edge Toptracer technology.
+            Join London's Most happening Golf driving range facility. Enjoy Exclusive benefits and offers by Joining PlayGolf Membership.
           </p>
-          
+
           {/* Primary Hero CTA */}
-          <button 
+          <button
             onClick={onJoinClick}
-            className="animate-soft-pulse inline-flex items-center gap-3 px-8 py-4.5 bg-[#064e3b] hover:bg-[#053d2f] active:scale-95 text-white rounded-2xl font-black text-lg transition-all shadow-2xl shadow-emerald-950/60 font-heading uppercase tracking-tight"
+            className="group relative w-full bg-emerald-500 hover:bg-emerald-400 text-[#022c22] font-black text-sm uppercase tracking-[0.15em] py-4 rounded-xl transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98] overflow-hidden"
           >
-            Join Free Membership
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-            </svg>
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              Join Free Membership
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+              </svg>
+            </span>
           </button>
         </div>
       </section>
@@ -62,7 +65,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onJoinClick }) => {
             },
             {
               title: "EXCLUSIVE OFFERS",
-              desc: "Unlock member-only discounts on Toptracer bays, coaching, and pro-shop items.",
+              desc: "Unlock member-only discounts on Drivers, balls, and Food/drinks.",
               icon: "M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
             },
             {
@@ -106,7 +109,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onJoinClick }) => {
       {/* Sticky Mobile CTA */}
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white via-white/95 to-transparent z-40">
         <div className="max-w-md mx-auto">
-          <button 
+          <button
             onClick={onJoinClick}
             className="animate-soft-pulse w-full py-5 bg-[#064e3b] hover:bg-[#053d2f] active:scale-[0.98] text-white rounded-[1.25rem] font-black text-xl transition-all shadow-2xl shadow-emerald-950/40 flex items-center justify-center gap-2 font-heading uppercase tracking-tight"
           >
@@ -117,9 +120,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onJoinClick }) => {
           </button>
         </div>
       </div>
-      
+
       <footer className="py-12 px-6 text-center border-t border-slate-50 mt-12">
         <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">© 2024 PlayGolf Northwick Park</p>
+        <button
+          onClick={onAdminClick}
+          className="mt-4 text-slate-300 hover:text-[#064e3b] text-[9px] font-bold uppercase tracking-widest transition-colors"
+        >
+          Admin
+        </button>
       </footer>
     </div>
   );

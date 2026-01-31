@@ -1,5 +1,5 @@
 
-export type AppView = 'landing' | 'form' | 'success';
+export type AppView = 'landing' | 'form' | 'success' | 'admin-login' | 'admin-dashboard';
 
 export interface FormData {
   firstName: string;
