@@ -1,7 +1,56 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import Header from './Header';
+import {
+    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    PieChart, Pie, Cell, BarChart, Bar, Legend
+} from 'recharts';
+
+// --- Analytics Helpers ---
+
+const processGrowthData = (members: Member[]) => {
+    // Group by date (last 7 days for simplicity, or all time)
+    // For this demo, let's show accumulation over time
+    const sorted = [...members].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+    // Accumulate count
+    let count = 0;
+    const data = sorted.map(m => {
+        count++;
+        return {
+            date: new Date(m.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+            total: count,
+            rawDate: m.created_at
+        };
+    });
+
+    // Reduce to avoid overcrowding (max 20 points)
+    if (data.length > 20) {
+        const step = Math.ceil(data.length / 20);
+        return data.filter((_, i) => i % step === 0 || i === data.length - 1);
+    }
+    return data;
+};
+
+const processSkillData = (members: Member[]) => {
+    const counts: Record<string, number> = {};
+    members.forEach(m => {
+        const skill = m.experience || 'Unknown';
+        counts[skill] = (counts[skill] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+};
+
+const processExperienceData = (members: Member[]) => {
+    const counts: Record<string, number> = {};
+    members.forEach(m => {
+        const years = m.years_playing || 'Unknown';
+        counts[years] = (counts[years] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, count]) => ({ name, count }));
+};
+
+const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 interface Member {
     id: string;
@@ -184,6 +233,96 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         Logout
                     </button>
                 </div>
+
+                {/* --- Analytics Section --- */}
+                {!loading && !error && members.length > 0 && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-10 animate-fade-in-up">
+                        {/* 1. Growth Chart */}
+                        <div className="bg-white p-6 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 xl:col-span-2">
+                            <h3 className="font-heading font-black text-slate-800 text-lg mb-6 uppercase tracking-tight flex items-center gap-2">
+                                <span className="p-1.5 bg-emerald-100/50 rounded-lg text-emerald-600">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                                </span>
+                                Member Growth
+                            </h3>
+                            <div className="h-[250px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={processGrowthData(members)}>
+                                        <defs>
+                                            <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} dy={10} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                                        <Tooltip
+                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                                            cursor={{ stroke: '#10b981', strokeWidth: 2 }}
+                                        />
+                                        <Area type="monotone" dataKey="total" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorTotal)" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        {/* 2. Skill Distribution */}
+                        <div className="bg-white p-6 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
+                            <h3 className="font-heading font-black text-slate-800 text-lg mb-2 uppercase tracking-tight flex items-center gap-2">
+                                <span className="p-1.5 bg-blue-100/50 rounded-lg text-blue-600">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
+                                </span>
+                                Skill Levels
+                            </h3>
+                            <div className="h-[250px] w-full flex items-center justify-center">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={processSkillData(members)}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={60}
+                                            outerRadius={80}
+                                            paddingAngle={5}
+                                            dataKey="value"
+                                        >
+                                            {processSkillData(members).map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} strokeWidth={0} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }} />
+                                        <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        {/* 3. Experience Levels (Bar Chart) - Full Width or Grid */}
+                        <div className="bg-white p-6 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 xl:col-span-3">
+                            <h3 className="font-heading font-black text-slate-800 text-lg mb-6 uppercase tracking-tight flex items-center gap-2">
+                                <span className="p-1.5 bg-orange-100/50 rounded-lg text-orange-600">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </span>
+                                Experience Distribution
+                            </h3>
+                            <div className="h-[250px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={processExperienceData(members)}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} dy={10} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                                        <Tooltip
+                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                                            cursor={{ fill: '#f1f5f9' }}
+                                        />
+                                        <Bar dataKey="count" fill="#f59e0b" radius={[6, 6, 0, 0]} barSize={40} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {loading ? (
                     <div className="bg-white rounded-3xl p-12 text-center shadow-xl">
